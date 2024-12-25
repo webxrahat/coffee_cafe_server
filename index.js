@@ -25,8 +25,14 @@ async function run() {
 
   const bookCollection = client.db("booksdb").collection("books");
 
+  app.get("/books", async (req, res) => {
+   const book = bookCollection.find();
+   const result = await book.toArray();
+   res.send(result);
+  });
+
   app.post("/books", async (req, res) => {
-   const book = await req.body;
+   const book = req.body;
    const result = await bookCollection.insertOne(book);
    res.send(result);
    //  console.log(book);
