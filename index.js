@@ -33,23 +33,44 @@ async function run() {
 
   app.get("/books/:id", async (req, res) => {
    const id = req.params.id;
-   const query = { _id: new ObjectId(id) };
-   const result = await bookCollection.findOne(query);
-   res.send(result);
-  });
 
-  app.post("/books", async (req, res) => {
-   const book = req.body;
-   const result = await bookCollection.insertOne(book);
-   res.send(result);
-   //  console.log(book);
+   if (!ObjectId.isValid(id)) {
+    return res.status(400).send({ error: "Invalid ID format" });
+   }
+
+   try {
+    const query = { _id: new ObjectId(id) };
+    const result = await bookCollection.findOne(query);
+    if (!result) {
+     return res.status(404).send({ error: "Book not found" });
+    }
+    res.send(result);
+   } catch (error) {
+    console.error("Error fetching book:", error);
+    res.status(500).send({ error: "Internal Server Error" });
+   }
   });
 
   app.delete("/books/:id", async (req, res) => {
    const id = req.params.id;
-   const query = { _id: new ObjectId(id) };
-   const result = await bookCollection.deleteOne(query);
-   res.send(result);
+
+   if (!ObjectId.isValid(id)) {
+    return res.status(400).send({ error: "Invalid ID format" });
+   }
+
+   try {
+    const query = { _id: new ObjectId(id) };
+    const result = await bookCollection.deleteOne(query);
+
+    if (result.deletedCount === 0) {
+     return res.status(404).send({ error: "Book not found" });
+    }
+
+    res.send({ message: "Book deleted successfully", result });
+   } catch (error) {
+    console.error("Error deleting book:", error);
+    res.status(500).send({ error: "Internal Server Error" });
+   }
   });
 
   await client.db("admin").command({ ping: 1 });
